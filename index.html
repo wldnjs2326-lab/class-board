@@ -5,480 +5,325 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>우리 반 알림판</title>
 <style>
+  :root {
+    --bg: #eef6f5;
+    --panel: #ffffff;
+    --teal: #2f7f7a;
+    --teal-dark: #1f5c58;
+    --teal-soft: #d4ebe8;
+    --text: #1f3533;
+    --muted: #6b8583;
+    --notice: #dbeafe;   --notice-edge: #7aa6e0;
+    --todo:   #fdf1c7;   --todo-edge:   #e0bd4f;
+    --praise: #fde0ea;   --praise-edge: #e592ad;
+  }
   * { box-sizing: border-box; }
-
+  html { font-size: clamp(16px, 1.35vw, 28px); }
   body {
     margin: 0;
-    min-height: 100vh;
-    font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-    background: linear-gradient(180deg, #e9f7f5 0%, #dcf1ee 100%);
-    color: #0f3d3a;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 24px 60px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+    line-height: 1.4;
   }
+  .wrap { max-width: 1600px; margin: 0 auto; padding: 1.6rem 2rem 3rem; }
 
   header {
-    text-align: center;
-    margin-bottom: 36px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    flex-wrap: wrap; gap: .5rem 1.5rem;
+    padding-bottom: 1rem; margin-bottom: 1.4rem;
+    border-bottom: 4px solid var(--teal-soft);
   }
+  #today { font-size: 3rem; font-weight: 800; color: var(--teal-dark); margin: 0; letter-spacing: -0.02em; }
+  #clock { font-size: 2.2rem; font-weight: 700; color: var(--teal); font-variant-numeric: tabular-nums; }
 
-  .today-date {
-    font-size: 56px;
-    font-weight: 800;
-    color: #0d6b62;
-    letter-spacing: 1px;
+  .composer {
+    display: flex; flex-wrap: wrap; gap: .8rem; align-items: center;
+    background: var(--panel); padding: 1rem; border-radius: 1.2rem;
+    box-shadow: 0 4px 14px rgba(47,127,122,.10);
+    margin-bottom: 1.6rem;
   }
-
-  .board-title {
-    font-size: 30px;
-    font-weight: 700;
-    color: #14867a;
-    margin-top: 6px;
+  .types { display: flex; gap: .5rem; }
+  .types input { position: absolute; opacity: 0; pointer-events: none; }
+  .types label {
+    font-size: 1.2rem; font-weight: 700; padding: .55rem 1.1rem;
+    border-radius: 999px; cursor: pointer; border: 3px solid transparent;
+    color: var(--text); user-select: none;
   }
+  .types label[data-type="notice"] { background: var(--notice); }
+  .types label[data-type="todo"]   { background: var(--todo); }
+  .types label[data-type="praise"] { background: var(--praise); }
+  .types input:checked + label { border-color: var(--teal-dark); }
+  .types input:focus-visible + label { outline: 3px solid var(--teal); outline-offset: 2px; }
 
-  .category-area {
-    width: 100%;
-    max-width: 900px;
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
+  #text {
+    flex: 1 1 18rem; min-width: 0;
+    font-size: 1.5rem; padding: .7rem 1rem;
+    border: 3px solid var(--teal-soft); border-radius: .9rem;
+    color: var(--text); background: #fbfefe; font-family: inherit;
   }
-
-  .cat-btn {
-    flex: 1;
-    font-size: 24px;
-    font-weight: 700;
-    padding: 14px 0;
-    border: 3px solid transparent;
-    border-radius: 14px;
-    background: #eef4f3;
-    color: #6b8f8b;
-    cursor: pointer;
-    transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  #text:focus { outline: none; border-color: var(--teal); }
+  #add {
+    font-size: 1.5rem; font-weight: 800; font-family: inherit;
+    padding: .7rem 1.8rem; border: none; border-radius: .9rem;
+    background: var(--teal); color: #fff; cursor: pointer;
   }
+  #add:hover { background: var(--teal-dark); }
 
-  .cat-btn:active {
-    transform: scale(0.97);
+  #list {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 1.1rem;
+    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
   }
-
-  .cat-btn[data-category="알림"].active {
-    background: #dce8ff;
-    border-color: #6d94e0;
-    color: #2d4f8f;
+  .card {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1.2rem 1.3rem; border-radius: 1.2rem;
+    border-left: 10px solid; box-shadow: 0 3px 10px rgba(0,0,0,.06);
+    transition: opacity .2s;
   }
+  .card.notice { background: var(--notice); border-color: var(--notice-edge); }
+  .card.todo   { background: var(--todo);   border-color: var(--todo-edge); }
+  .card.praise { background: var(--praise); border-color: var(--praise-edge); }
 
-  .cat-btn[data-category="할 일"].active {
-    background: #fff0cf;
-    border-color: #e0ab3d;
-    color: #8a5f0c;
+  .check {
+    flex: none; width: 2.2rem; height: 2.2rem; margin-top: .25rem;
+    accent-color: var(--teal); cursor: pointer;
   }
-
-  .cat-btn[data-category="칭찬"].active {
-    background: #ffdcea;
-    border-color: #e06693;
-    color: #99295a;
+  .body { flex: 1; min-width: 0; }
+  .tag {
+    display: inline-block; font-size: 1rem; font-weight: 800;
+    padding: .15rem .7rem; border-radius: 999px;
+    background: rgba(255,255,255,.75); color: var(--teal-dark); margin-bottom: .35rem;
   }
+  .msg { font-size: 1.9rem; font-weight: 700; margin: 0; word-break: keep-all; overflow-wrap: anywhere; }
+  .meta { font-size: 1.05rem; color: var(--muted); margin-top: .4rem; }
+  .card.done .msg { text-decoration: line-through; text-decoration-thickness: 3px; opacity: .45; }
+  .card.done .tag, .card.done .meta { opacity: .55; }
 
-  .input-area {
-    width: 100%;
-    max-width: 900px;
-    display: flex;
-    gap: 14px;
-    margin-bottom: 40px;
+  .del {
+    flex: none; font-size: 1.1rem; font-family: inherit; font-weight: 700;
+    border: none; background: rgba(255,255,255,.7); color: var(--muted);
+    padding: .4rem .8rem; border-radius: .7rem; cursor: pointer;
   }
+  .del:hover { background: #fff; color: #b44; }
 
-  #notice-input {
-    flex: 1;
-    font-size: 30px;
-    padding: 20px 24px;
-    border: 3px solid #14867a;
-    border-radius: 16px;
-    outline: none;
-    background: #ffffff;
-    color: #0f3d3a;
+  .empty { font-size: 1.6rem; color: var(--muted); text-align: center; padding: 3rem 0; }
+
+  /* ---- TV 모드 버튼 ---- */
+  .head-right { display: flex; align-items: center; gap: 1.2rem; }
+  #tvBtn {
+    font-size: 1.1rem; font-weight: 800; font-family: inherit;
+    padding: .5rem 1.1rem; border-radius: .8rem; cursor: pointer;
+    border: 3px solid var(--teal); background: var(--panel); color: var(--teal-dark);
   }
+  #tvBtn:hover { background: var(--teal-soft); }
 
-  #notice-input:focus {
-    border-color: #0d6b62;
-    box-shadow: 0 0 0 4px rgba(20, 134, 122, 0.2);
-  }
+  /* ---- TV 모드 ---- */
+  body.tv .composer,
+  body.tv .del { display: none; }
+  body.tv .wrap { max-width: none; padding: 2rem 3rem; }
+  body.tv header { margin-bottom: 2rem; }
+  body.tv #today { font-size: 4.6rem; }
+  body.tv #clock { font-size: 3.4rem; }
+  body.tv #list { grid-template-columns: repeat(auto-fill, minmax(36rem, 1fr)); gap: 1.6rem; }
+  body.tv .card { padding: 1.6rem 1.8rem; gap: 1.4rem; border-left-width: 14px; }
+  body.tv .check { width: 3rem; height: 3rem; }
+  body.tv .tag { font-size: 1.4rem; padding: .2rem .9rem; margin-bottom: .5rem; }
+  body.tv .msg { font-size: 3rem; }
+  body.tv .meta { font-size: 1.4rem; }
+  body.tv .empty { font-size: 2.6rem; }
+  /* TV 모드에서는 나가기 버튼을 작고 흐리게, 마우스를 올리면 또렷하게 */
+  body.tv #tvBtn { opacity: .35; font-size: 1rem; }
+  body.tv #tvBtn:hover, body.tv #tvBtn:focus-visible { opacity: 1; }
 
-  #add-btn {
-    font-size: 30px;
-    font-weight: 700;
-    padding: 20px 36px;
-    border: none;
-    border-radius: 16px;
-    background: #0d6b62;
-    color: #ffffff;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  #add-btn:hover {
-    background: #0a544e;
-  }
-
-  #add-btn:active {
-    transform: scale(0.98);
-  }
-
-  .board {
-    width: 100%;
-    max-width: 900px;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-  }
-
-  .notice-card {
-    background: #ffffff;
-    border-left: 12px solid #14867a;
-    border-radius: 18px;
-    padding: 28px 30px;
-    box-shadow: 0 6px 16px rgba(15, 61, 58, 0.12);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-    animation: pop-in 0.25s ease;
-  }
-
-  .notice-card[data-category="알림"] {
-    background: #eaf1ff;
-    border-left-color: #6d94e0;
-  }
-
-  .notice-card[data-category="할 일"] {
-    background: #fff7e2;
-    border-left-color: #e0ab3d;
-  }
-
-  .notice-card[data-category="칭찬"] {
-    background: #ffedf4;
-    border-left-color: #e06693;
-  }
-
-  .notice-card.done {
-    opacity: 0.55;
-  }
-
-  @keyframes pop-in {
-    from { opacity: 0; transform: translateY(-12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .done-checkbox {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    margin-top: 6px;
-    cursor: pointer;
-    accent-color: #0d6b62;
-  }
-
-  .notice-content {
-    flex: 1;
-  }
-
-  .notice-category {
-    display: inline-block;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 4px 14px;
-    border-radius: 999px;
-    background: rgba(15, 61, 58, 0.08);
-    color: #0d6b62;
-    margin-bottom: 10px;
-  }
-
-  .notice-text {
-    font-size: 34px;
-    font-weight: 700;
-    line-height: 1.4;
-    word-break: break-word;
-  }
-
-  .notice-text.done {
-    text-decoration: line-through;
-    color: #7c8f8d;
-  }
-
-  .notice-time {
-    margin-top: 10px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #4c8f88;
-  }
-
-  .delete-btn {
-    flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    font-size: 26px;
-    font-weight: 700;
-    border: none;
-    border-radius: 50%;
-    background: #f1f8f7;
-    color: #0d6b62;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-
-  .delete-btn:hover {
-    background: #e05252;
-    color: #ffffff;
-  }
-
-  .empty-message {
-    text-align: center;
-    font-size: 26px;
-    color: #6ba39b;
-    padding: 40px 0;
-  }
-
-  .tv-toggle-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 10px 18px;
-    border: 2px solid #14867a;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #0d6b62;
-    cursor: pointer;
-    z-index: 10;
-    transition: opacity 0.2s ease;
-  }
-
-  body.tv-mode .tv-toggle-btn {
-    opacity: 0.3;
-  }
-
-  body.tv-mode .tv-toggle-btn:hover {
-    opacity: 1;
-  }
-
-  body.tv-mode .category-area,
-  body.tv-mode .input-area,
-  body.tv-mode .delete-btn,
-  body.tv-mode .done-checkbox {
-    display: none !important;
-  }
-
-  body.tv-mode header,
-  body.tv-mode .board {
-    max-width: 1600px;
-  }
-
-  body.tv-mode .today-date {
-    font-size: 100px;
-  }
-
-  body.tv-mode .board-title {
-    font-size: 46px;
-  }
-
-  body.tv-mode .notice-card {
-    padding: 44px 48px;
-  }
-
-  body.tv-mode .board {
-    gap: 34px;
-  }
-
-  body.tv-mode .notice-category {
-    font-size: 26px;
-    padding: 6px 20px;
-  }
-
-  body.tv-mode .notice-text {
-    font-size: 60px;
-  }
-
-  body.tv-mode .notice-time {
-    font-size: 28px;
+  @media (max-width: 700px) {
+    .wrap { padding: 1rem; }
+    #list { grid-template-columns: 1fr; }
+    #today { font-size: 2.2rem; }
   }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <h1 id="today"></h1>
+    <div class="head-right">
+      <div id="clock"></div>
+      <button id="tvBtn" type="button">📺 TV 모드</button>
+    </div>
+  </header>
 
-<button id="tv-toggle-btn" class="tv-toggle-btn">TV 모드 켜기</button>
+  <div class="composer">
+    <div class="types" role="radiogroup" aria-label="알림 종류">
+      <input type="radio" name="type" id="t-notice" value="notice" checked>
+      <label for="t-notice" data-type="notice">📢 알림</label>
+      <input type="radio" name="type" id="t-todo" value="todo">
+      <label for="t-todo" data-type="todo">✏️ 할 일</label>
+      <input type="radio" name="type" id="t-praise" value="praise">
+      <label for="t-praise" data-type="praise">🌟 칭찬</label>
+    </div>
+    <input id="text" type="text" placeholder="내용을 적고 Enter 또는 추가" autocomplete="off">
+    <button id="add" type="button">추가</button>
+  </div>
 
-<header>
-  <div class="today-date" id="today-date"></div>
-  <div class="board-title">우리 반 알림판</div>
-</header>
-
-<div class="category-area" id="category-area">
-  <button class="cat-btn" data-category="알림">알림</button>
-  <button class="cat-btn" data-category="할 일">할 일</button>
-  <button class="cat-btn" data-category="칭찬">칭찬</button>
+  <ul id="list"></ul>
+  <p class="empty" id="empty">아직 알림이 없어요.</p>
 </div>
-
-<div class="input-area">
-  <input type="text" id="notice-input" placeholder="알릴 내용을 입력하세요" maxlength="200">
-  <button id="add-btn">추가</button>
-</div>
-
-<div class="board" id="board"></div>
 
 <script>
-  const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+(function () {
+  var LABELS = { notice: "📢 알림", todo: "✏️ 할 일", praise: "🌟 칭찬" };
+  var KEY = "classroom-board-v1";
+  var items = load();
 
-  function renderToday() {
-    const now = new Date();
-    const text = `${now.getMonth() + 1}월 ${now.getDate()}일 ${WEEKDAYS[now.getDay()]}요일`;
-    document.getElementById("today-date").textContent = text;
+  var todayEl = document.getElementById("today");
+  var clockEl = document.getElementById("clock");
+  var listEl  = document.getElementById("list");
+  var emptyEl = document.getElementById("empty");
+  var textEl  = document.getElementById("text");
+  var addBtn  = document.getElementById("add");
+
+  // ---- 날짜 / 시계 ----
+  function tick() {
+    var now = new Date();
+    var days = ["일", "월", "화", "수", "목", "금", "토"];
+    todayEl.textContent = (now.getMonth() + 1) + "월 " + now.getDate() + "일 " + days[now.getDay()] + "요일";
+    clockEl.textContent = fmtTime(now);
   }
-
-  function formatTime(date) {
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const period = hours < 12 ? "오전" : "오후";
-    hours = hours % 12;
-    if (hours === 0) hours = 12;
-    return `${period} ${hours}:${minutes} 작성`;
+  function fmtTime(d) {
+    var h = d.getHours(), m = d.getMinutes();
+    var ampm = h < 12 ? "오전" : "오후";
+    var h12 = h % 12 === 0 ? 12 : h % 12;
+    return ampm + " " + h12 + ":" + (m < 10 ? "0" : "") + m;
   }
+  function fmtStamp(ts) {
+    var d = new Date(ts), now = new Date();
+    var sameDay = d.toDateString() === now.toDateString();
+    return (sameDay ? "" : (d.getMonth() + 1) + "/" + d.getDate() + " ") + fmtTime(d);
+  }
+  tick();
+  setInterval(tick, 10000);
 
-  const STORAGE_KEY = "class-board-notices";
-  const CATEGORIES = ["알림", "할 일", "칭찬"];
-  let selectedCategory = "알림";
-
-  let notices = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map((n) => ({
-    ...n,
-    category: CATEGORIES.includes(n.category) ? n.category : "알림",
-    done: !!n.done,
-  }));
-
+  // ---- 저장 (브라우저에 보관, 새로 고쳐도 유지) ----
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; }
+  }
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notices));
+    try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {}
   }
 
-  function renderCategoryButtons() {
-    document.querySelectorAll(".cat-btn").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.category === selectedCategory);
-    });
-  }
-
-  document.querySelectorAll(".cat-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      selectedCategory = btn.dataset.category;
-      renderCategoryButtons();
-      document.getElementById("notice-input").focus();
-    });
-  });
-
-  function renderBoard() {
-    const board = document.getElementById("board");
-    board.innerHTML = "";
-
-    if (notices.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "empty-message";
-      empty.textContent = "등록된 알림이 없습니다.";
-      board.appendChild(empty);
-      return;
-    }
-
-    notices.forEach((notice) => {
-      const card = document.createElement("div");
-      card.className = "notice-card" + (notice.done ? " done" : "");
-      card.dataset.category = notice.category;
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.className = "done-checkbox";
-      checkbox.checked = notice.done;
-      checkbox.addEventListener("change", () => {
-        notice.done = checkbox.checked;
-        save();
-        renderBoard();
-      });
-
-      const content = document.createElement("div");
-      content.className = "notice-content";
-
-      const category = document.createElement("div");
-      category.className = "notice-category";
-      category.textContent = notice.category;
-
-      const text = document.createElement("div");
-      text.className = "notice-text" + (notice.done ? " done" : "");
-      text.textContent = notice.text;
-
-      const time = document.createElement("div");
-      time.className = "notice-time";
-      time.textContent = formatTime(new Date(notice.createdAt));
-
-      content.appendChild(category);
-      content.appendChild(text);
-      content.appendChild(time);
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "delete-btn";
-      deleteBtn.textContent = "×";
-      deleteBtn.addEventListener("click", () => {
-        notices = notices.filter((n) => n.id !== notice.id);
-        save();
-        renderBoard();
-      });
-
-      card.appendChild(checkbox);
-      card.appendChild(content);
-      card.appendChild(deleteBtn);
-      board.appendChild(card);
-    });
-  }
-
-  function addNotice() {
-    const input = document.getElementById("notice-input");
-    const value = input.value.trim();
-    if (!value) return;
-
-    notices.unshift({
-      id: Date.now(),
-      text: value,
-      category: selectedCategory,
-      done: false,
-      createdAt: new Date().toISOString(),
-    });
-
+  // ---- 추가 ----
+  function addItem() {
+    var text = textEl.value.trim();
+    if (!text) { textEl.focus(); return; }
+    var type = document.querySelector('input[name="type"]:checked').value;
+    items.unshift({ id: Date.now() + "-" + Math.random().toString(36).slice(2, 7), text: text, type: type, done: false, at: Date.now() });
     save();
-    renderBoard();
-    input.value = "";
-    input.focus();
+    render();
+    textEl.value = "";
+    textEl.focus();
   }
 
-  document.getElementById("add-btn").addEventListener("click", addNotice);
-  document.getElementById("notice-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addNotice();
+  addBtn.addEventListener("click", addItem);
+
+  // 한글 입력 중(조합 중)에 누른 Enter는 무시해서 중복 추가를 막음
+  var composing = false;
+  textEl.addEventListener("compositionstart", function () { composing = true; });
+  textEl.addEventListener("compositionend",   function () { composing = false; });
+  textEl.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    if (e.isComposing || composing || e.keyCode === 229) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    addItem();
   });
 
-  const TV_MODE_KEY = "class-board-tv-mode";
-  let tvMode = localStorage.getItem(TV_MODE_KEY) === "1";
-
-  function applyTvMode() {
-    document.body.classList.toggle("tv-mode", tvMode);
-    document.getElementById("tv-toggle-btn").textContent = tvMode ? "TV 모드 끄기" : "TV 모드 켜기";
+  // ---- 체크 / 삭제 ----
+  listEl.addEventListener("change", function (e) {
+    if (!e.target.classList.contains("check")) return;
+    var item = find(e.target.closest(".card").dataset.id);
+    if (item) { item.done = e.target.checked; save(); render(); }
+  });
+  listEl.addEventListener("click", function (e) {
+    if (!e.target.classList.contains("del")) return;
+    var id = e.target.closest(".card").dataset.id;
+    items = items.filter(function (it) { return it.id !== id; });
+    save(); render();
+  });
+  function find(id) {
+    for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i];
   }
 
-  document.getElementById("tv-toggle-btn").addEventListener("click", () => {
-    tvMode = !tvMode;
-    localStorage.setItem(TV_MODE_KEY, tvMode ? "1" : "0");
-    applyTvMode();
+  // ---- 그리기 ----
+  function render() {
+    listEl.innerHTML = "";
+    items.forEach(function (it) {
+      var li = document.createElement("li");
+      li.className = "card " + it.type + (it.done ? " done" : "");
+      li.dataset.id = it.id;
+
+      var cb = document.createElement("input");
+      cb.type = "checkbox"; cb.className = "check"; cb.checked = it.done;
+      cb.setAttribute("aria-label", "완료");
+
+      var body = document.createElement("div");
+      body.className = "body";
+      var tag = document.createElement("span");
+      tag.className = "tag"; tag.textContent = LABELS[it.type];
+      var msg = document.createElement("p");
+      msg.className = "msg"; msg.textContent = it.text;
+      var meta = document.createElement("div");
+      meta.className = "meta"; meta.textContent = fmtStamp(it.at) + " 작성";
+      body.append(tag, msg, meta);
+
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "del"; del.textContent = "삭제";
+
+      li.append(cb, body, del);
+      listEl.appendChild(li);
+    });
+    emptyEl.style.display = items.length ? "none" : "block";
+  }
+  // ---- TV 모드 ----
+  var TV_KEY = "classroom-board-tv";
+  var tvBtn = document.getElementById("tvBtn");
+
+  function setTv(on) {
+    document.body.classList.toggle("tv", on);
+    tvBtn.textContent = on ? "✕ TV 모드 끄기" : "📺 TV 모드";
+    try { localStorage.setItem(TV_KEY, on ? "1" : "0"); } catch (e) {}
+    if (on) {
+      // 가능하면 전체 화면으로 (지원하지 않으면 그냥 넘어감)
+      var el = document.documentElement;
+      if (el.requestFullscreen && !document.fullscreenElement) {
+        el.requestFullscreen().catch(function () {});
+      }
+    } else {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function () {});
+      }
+      textEl.focus();
+    }
+  }
+  tvBtn.addEventListener("click", function () {
+    setTv(!document.body.classList.contains("tv"));
+  });
+  // Esc 키로 TV 모드 끄기
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && document.body.classList.contains("tv")) setTv(false);
   });
 
-  renderToday();
-  renderCategoryButtons();
-  renderBoard();
-  applyTvMode();
-  setInterval(renderToday, 60 * 1000);
+  render();
+  var savedTv = false;
+  try { savedTv = localStorage.getItem(TV_KEY) === "1"; } catch (e) {}
+  if (savedTv) {
+    // 다시 열었을 때도 TV 모드 유지 (전체 화면은 브라우저 정책상 클릭이 있어야 해서 제외)
+    document.body.classList.add("tv");
+    tvBtn.textContent = "✕ TV 모드 끄기";
+  } else {
+    textEl.focus();
+  }
+})();
 </script>
-
 </body>
 </html>
