@@ -3,327 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>우리 반 알림판</title>
+<title>자리 뽑기</title>
 <style>
   :root {
-    --bg: #eef6f5;
-    --panel: #ffffff;
-    --teal: #2f7f7a;
-    --teal-dark: #1f5c58;
-    --teal-soft: #d4ebe8;
-    --text: #1f3533;
-    --muted: #6b8583;
-    --notice: #dbeafe;   --notice-edge: #7aa6e0;
-    --todo:   #fdf1c7;   --todo-edge:   #e0bd4f;
-    --praise: #fde0ea;   --praise-edge: #e592ad;
+    --bg: #f4f1ea;
+    --board: #2f4f45;
+    --board-text: #f3f1e7;
+    --seat: #ffffff;
+    --seat-border: #c9c2b2;
+    --seat-text: #2b3a4a;
+    --accent: #4a6fa5;
+    --accent-dark: #3a5985;
+    --muted: #7a7466;
   }
-  * { box-sizing: border-box; }
-  html { font-size: clamp(16px, 1.35vw, 28px); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
   body {
-    margin: 0;
     background: var(--bg);
-    color: var(--text);
+    color: var(--seat-text);
     font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
-    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2vh 3vw 3vh;
+    gap: 2.5vh;
   }
-  .wrap { max-width: 1600px; margin: 0 auto; padding: 1.6rem 2rem 3rem; }
-
-  header {
-    display: flex; align-items: baseline; justify-content: space-between;
-    flex-wrap: wrap; gap: .5rem 1.5rem;
-    padding-bottom: 1rem; margin-bottom: 1.4rem;
-    border-bottom: 4px solid var(--teal-soft);
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: clamp(1.2rem, 2.2vw, 2rem);
+    font-weight: 600;
   }
-  #today { font-size: 3rem; font-weight: 800; color: var(--teal-dark); margin: 0; letter-spacing: -0.02em; }
-  #clock { font-size: 2.2rem; font-weight: 700; color: var(--teal); font-variant-numeric: tabular-nums; }
-
-  .composer {
-    display: flex; flex-wrap: wrap; gap: .8rem; align-items: center;
-    background: var(--panel); padding: 1rem; border-radius: 1.2rem;
-    box-shadow: 0 4px 14px rgba(47,127,122,.10);
-    margin-bottom: 1.6rem;
+  .controls input {
+    width: 5.5em;
+    font-size: inherit;
+    font-weight: 700;
+    text-align: center;
+    padding: 0.3em 0.4em;
+    border: 3px solid var(--seat-border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--seat-text);
   }
-  .types { display: flex; gap: .5rem; }
-  .types input { position: absolute; opacity: 0; pointer-events: none; }
-  .types label {
-    font-size: 1.2rem; font-weight: 700; padding: .55rem 1.1rem;
-    border-radius: 999px; cursor: pointer; border: 3px solid transparent;
-    color: var(--text); user-select: none;
+  .controls input:focus { outline: none; border-color: var(--accent); }
+  .controls button {
+    font-size: inherit;
+    font-weight: 700;
+    padding: 0.35em 1.4em;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
   }
-  .types label[data-type="notice"] { background: var(--notice); }
-  .types label[data-type="todo"]   { background: var(--todo); }
-  .types label[data-type="praise"] { background: var(--praise); }
-  .types input:checked + label { border-color: var(--teal-dark); }
-  .types input:focus-visible + label { outline: 3px solid var(--teal); outline-offset: 2px; }
-
-  #text {
-    flex: 1 1 18rem; min-width: 0;
-    font-size: 1.5rem; padding: .7rem 1rem;
-    border: 3px solid var(--teal-soft); border-radius: .9rem;
-    color: var(--text); background: #fbfefe; font-family: inherit;
+  .controls button:hover { background: var(--accent-dark); }
+  .controls button:active { transform: scale(0.97); }
+  .message {
+    min-height: 1.4em;
+    font-size: clamp(1rem, 1.6vw, 1.5rem);
+    color: #a0522d;
+    font-weight: 600;
   }
-  #text:focus { outline: none; border-color: var(--teal); }
-  #add {
-    font-size: 1.5rem; font-weight: 800; font-family: inherit;
-    padding: .7rem 1.8rem; border: none; border-radius: .9rem;
-    background: var(--teal); color: #fff; cursor: pointer;
+  .board {
+    width: min(70%, 900px);
+    background: var(--board);
+    color: var(--board-text);
+    text-align: center;
+    font-size: clamp(2rem, 4.5vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: 0.5em;
+    padding: 0.35em 0 0.35em 0.5em;
+    border-radius: 14px;
+    border: 8px solid #8b6f4e;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   }
-  #add:hover { background: var(--teal-dark); }
-
-  #list {
-    list-style: none; margin: 0; padding: 0;
-    display: grid; gap: 1.1rem;
-    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+  .seats {
+    width: min(100%, 1500px);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: clamp(0.6rem, 1.6vw, 1.8rem);
+    flex: 1;
+    align-content: start;
   }
-  .card {
-    display: flex; gap: 1rem; align-items: flex-start;
-    padding: 1.2rem 1.3rem; border-radius: 1.2rem;
-    border-left: 10px solid; box-shadow: 0 3px 10px rgba(0,0,0,.06);
-    transition: opacity .2s;
+  .seat {
+    aspect-ratio: 3 / 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--seat);
+    border: 3px solid var(--seat-border);
+    border-radius: 16px;
+    font-size: clamp(2rem, 5.5vw, 6rem);
+    font-weight: 800;
+    color: var(--seat-text);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
   }
-  .card.notice { background: var(--notice); border-color: var(--notice-edge); }
-  .card.todo   { background: var(--todo);   border-color: var(--todo-edge); }
-  .card.praise { background: var(--praise); border-color: var(--praise-edge); }
-
-  .check {
-    flex: none; width: 2.2rem; height: 2.2rem; margin-top: .25rem;
-    accent-color: var(--teal); cursor: pointer;
+  .seat.empty {
+    background: transparent;
+    border-style: dashed;
+    box-shadow: none;
+    color: transparent;
   }
-  .body { flex: 1; min-width: 0; }
-  .tag {
-    display: inline-block; font-size: 1rem; font-weight: 800;
-    padding: .15rem .7rem; border-radius: 999px;
-    background: rgba(255,255,255,.75); color: var(--teal-dark); margin-bottom: .35rem;
+  .seat.pop { animation: pop 0.35s ease-out both; }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
   }
-  .msg { font-size: 1.9rem; font-weight: 700; margin: 0; word-break: keep-all; overflow-wrap: anywhere; }
-  .meta { font-size: 1.05rem; color: var(--muted); margin-top: .4rem; }
-  .card.done .msg { text-decoration: line-through; text-decoration-thickness: 3px; opacity: .45; }
-  .card.done .tag, .card.done .meta { opacity: .55; }
-
-  .del {
-    flex: none; font-size: 1.1rem; font-family: inherit; font-weight: 700;
-    border: none; background: rgba(255,255,255,.7); color: var(--muted);
-    padding: .4rem .8rem; border-radius: .7rem; cursor: pointer;
-  }
-  .del:hover { background: #fff; color: #b44; }
-
-  .empty { font-size: 1.6rem; color: var(--muted); text-align: center; padding: 3rem 0; }
-
-  /* ---- TV 모드 버튼 ---- */
-  .head-right { display: flex; align-items: center; gap: 1.2rem; }
-  #tvBtn {
-    font-size: 1.1rem; font-weight: 800; font-family: inherit;
-    padding: .5rem 1.1rem; border-radius: .8rem; cursor: pointer;
-    border: 3px solid var(--teal); background: var(--panel); color: var(--teal-dark);
-  }
-  #tvBtn:hover { background: var(--teal-soft); }
-
-  /* ---- TV 모드 ---- */
-  body.tv .composer,
-  body.tv .del { display: none; }
-  body.tv .wrap { max-width: none; padding: 2rem 3rem; }
-  body.tv header { margin-bottom: 2rem; }
-  body.tv #today { font-size: 4.6rem; }
-  body.tv #clock { font-size: 3.4rem; }
-  body.tv #list { grid-template-columns: repeat(auto-fill, minmax(36rem, 1fr)); gap: 1.6rem; }
-  body.tv .card { padding: 1.6rem 1.8rem; gap: 1.4rem; border-left-width: 14px; }
-  body.tv .check { width: 3rem; height: 3rem; }
-  body.tv .tag { font-size: 1.4rem; padding: .2rem .9rem; margin-bottom: .5rem; }
-  body.tv .msg { font-size: 3rem; }
-  body.tv .meta { font-size: 1.4rem; }
-  body.tv .empty { font-size: 2.6rem; }
-  /* TV 모드에서는 나가기 버튼을 작고 흐리게, 마우스를 올리면 또렷하게 */
-  body.tv #tvBtn { opacity: .35; font-size: 1rem; }
-  body.tv #tvBtn:hover, body.tv #tvBtn:focus-visible { opacity: 1; }
-
-  @media (max-width: 700px) {
-    .wrap { padding: 1rem; }
-    #list { grid-template-columns: 1fr; }
-    #today { font-size: 2.2rem; }
+  .hint {
+    font-size: clamp(0.9rem, 1.3vw, 1.2rem);
+    color: var(--muted);
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1 id="today"></h1>
-    <div class="head-right">
-      <div id="clock"></div>
-      <button id="tvBtn" type="button">📺 TV 모드</button>
-    </div>
-  </header>
 
-  <div class="composer">
-    <div class="types" role="radiogroup" aria-label="알림 종류">
-      <input type="radio" name="type" id="t-notice" value="notice" checked>
-      <label for="t-notice" data-type="notice">📢 알림</label>
-      <input type="radio" name="type" id="t-todo" value="todo">
-      <label for="t-todo" data-type="todo">✏️ 할 일</label>
-      <input type="radio" name="type" id="t-praise" value="praise">
-      <label for="t-praise" data-type="praise">🌟 칭찬</label>
-    </div>
-    <input id="text" type="text" placeholder="내용을 적고 Enter 또는 추가" autocomplete="off">
-    <button id="add" type="button">추가</button>
+  <div class="controls">
+    <label for="count">학생 수</label>
+    <input type="number" id="count" value="24" min="1" max="60">
+    <button id="drawBtn">자리 뽑기</button>
   </div>
+  <div class="message" id="message"></div>
 
-  <ul id="list"></ul>
-  <p class="empty" id="empty">아직 알림이 없어요.</p>
-</div>
+  <div class="board">칠판</div>
+
+  <div class="seats" id="seats"></div>
+
+  <div class="hint">가로 6자리 · 칠판에 가까운 줄이 앞줄입니다</div>
 
 <script>
-(function () {
-  var LABELS = { notice: "📢 알림", todo: "✏️ 할 일", praise: "🌟 칭찬" };
-  var KEY = "classroom-board-v1";
-  var items = load();
+  var COLS = 6;
+  var MIN_ROWS = 4;
+  var MAX_STUDENTS = 60;
 
-  var todayEl = document.getElementById("today");
-  var clockEl = document.getElementById("clock");
-  var listEl  = document.getElementById("list");
-  var emptyEl = document.getElementById("empty");
-  var textEl  = document.getElementById("text");
-  var addBtn  = document.getElementById("add");
+  var seatsEl = document.getElementById('seats');
+  var countEl = document.getElementById('count');
+  var msgEl = document.getElementById('message');
 
-  // ---- 날짜 / 시계 ----
-  function tick() {
-    var now = new Date();
-    var days = ["일", "월", "화", "수", "목", "금", "토"];
-    todayEl.textContent = (now.getMonth() + 1) + "월 " + now.getDate() + "일 " + days[now.getDay()] + "요일";
-    clockEl.textContent = fmtTime(now);
-  }
-  function fmtTime(d) {
-    var h = d.getHours(), m = d.getMinutes();
-    var ampm = h < 12 ? "오전" : "오후";
-    var h12 = h % 12 === 0 ? 12 : h % 12;
-    return ampm + " " + h12 + ":" + (m < 10 ? "0" : "") + m;
-  }
-  function fmtStamp(ts) {
-    var d = new Date(ts), now = new Date();
-    var sameDay = d.toDateString() === now.toDateString();
-    return (sameDay ? "" : (d.getMonth() + 1) + "/" + d.getDate() + " ") + fmtTime(d);
-  }
-  tick();
-  setInterval(tick, 10000);
-
-  // ---- 저장 (브라우저에 보관, 새로 고쳐도 유지) ----
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; }
-  }
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {}
+  function randomInt(max) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      var buf = new Uint32Array(1);
+      var limit = Math.floor(4294967296 / max) * max;
+      do { window.crypto.getRandomValues(buf); } while (buf[0] >= limit);
+      return buf[0] % max;
+    }
+    return Math.floor(Math.random() * max);
   }
 
-  // ---- 추가 ----
-  function addItem() {
-    var text = textEl.value.trim();
-    if (!text) { textEl.focus(); return; }
-    var type = document.querySelector('input[name="type"]:checked').value;
-    items.unshift({ id: Date.now() + "-" + Math.random().toString(36).slice(2, 7), text: text, type: type, done: false, at: Date.now() });
-    save();
-    render();
-    textEl.value = "";
-    textEl.focus();
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = randomInt(i + 1);
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
   }
 
-  addBtn.addEventListener("click", addItem);
-
-  // 한글 입력 중(조합 중)에 누른 Enter는 무시해서 중복 추가를 막음
-  var composing = false;
-  textEl.addEventListener("compositionstart", function () { composing = true; });
-  textEl.addEventListener("compositionend",   function () { composing = false; });
-  textEl.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter") return;
-    if (e.isComposing || composing || e.keyCode === 229) return;
-    e.preventDefault();
-    if (e.repeat) return;
-    addItem();
-  });
-
-  // ---- 체크 / 삭제 ----
-  listEl.addEventListener("change", function (e) {
-    if (!e.target.classList.contains("check")) return;
-    var item = find(e.target.closest(".card").dataset.id);
-    if (item) { item.done = e.target.checked; save(); render(); }
-  });
-  listEl.addEventListener("click", function (e) {
-    if (!e.target.classList.contains("del")) return;
-    var id = e.target.closest(".card").dataset.id;
-    items = items.filter(function (it) { return it.id !== id; });
-    save(); render();
-  });
-  function find(id) {
-    for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i];
-  }
-
-  // ---- 그리기 ----
-  function render() {
-    listEl.innerHTML = "";
-    items.forEach(function (it) {
-      var li = document.createElement("li");
-      li.className = "card " + it.type + (it.done ? " done" : "");
-      li.dataset.id = it.id;
-
-      var cb = document.createElement("input");
-      cb.type = "checkbox"; cb.className = "check"; cb.checked = it.done;
-      cb.setAttribute("aria-label", "완료");
-
-      var body = document.createElement("div");
-      body.className = "body";
-      var tag = document.createElement("span");
-      tag.className = "tag"; tag.textContent = LABELS[it.type];
-      var msg = document.createElement("p");
-      msg.className = "msg"; msg.textContent = it.text;
-      var meta = document.createElement("div");
-      meta.className = "meta"; meta.textContent = fmtStamp(it.at) + " 작성";
-      body.append(tag, msg, meta);
-
-      var del = document.createElement("button");
-      del.type = "button"; del.className = "del"; del.textContent = "삭제";
-
-      li.append(cb, body, del);
-      listEl.appendChild(li);
-    });
-    emptyEl.style.display = items.length ? "none" : "block";
-  }
-  // ---- TV 모드 ----
-  var TV_KEY = "classroom-board-tv";
-  var tvBtn = document.getElementById("tvBtn");
-
-  function setTv(on) {
-    document.body.classList.toggle("tv", on);
-    tvBtn.textContent = on ? "✕ TV 모드 끄기" : "📺 TV 모드";
-    try { localStorage.setItem(TV_KEY, on ? "1" : "0"); } catch (e) {}
-    if (on) {
-      // 가능하면 전체 화면으로 (지원하지 않으면 그냥 넘어감)
-      var el = document.documentElement;
-      if (el.requestFullscreen && !document.fullscreenElement) {
-        el.requestFullscreen().catch(function () {});
+  function render(numbers, total, animate) {
+    var rows = Math.max(MIN_ROWS, Math.ceil(total / COLS));
+    var slots = rows * COLS;
+    seatsEl.innerHTML = '';
+    for (var i = 0; i < slots; i++) {
+      var div = document.createElement('div');
+      div.className = 'seat';
+      if (numbers && i < numbers.length) {
+        div.textContent = numbers[i];
+        if (animate) {
+          div.classList.add('pop');
+          div.style.animationDelay = (i * 0.03) + 's';
+        }
+      } else if (i >= total) {
+        div.classList.add('empty');
       }
-    } else {
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(function () {});
-      }
-      textEl.focus();
+      seatsEl.appendChild(div);
     }
   }
-  tvBtn.addEventListener("click", function () {
-    setTv(!document.body.classList.contains("tv"));
+
+  function draw() {
+    var n = parseInt(countEl.value, 10);
+    if (isNaN(n) || n < 1) {
+      msgEl.textContent = '학생 수를 1 이상으로 입력해 주세요.';
+      return;
+    }
+    if (n > MAX_STUDENTS) {
+      msgEl.textContent = '학생 수는 ' + MAX_STUDENTS + '명까지 입력할 수 있어요.';
+      return;
+    }
+    msgEl.textContent = '';
+    var nums = [];
+    for (var i = 1; i <= n; i++) nums.push(i);
+    render(shuffle(nums), n, true);
+  }
+
+  document.getElementById('drawBtn').addEventListener('click', draw);
+  countEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') draw();
   });
-  // Esc 키로 TV 모드 끄기
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && document.body.classList.contains("tv")) setTv(false);
+  countEl.addEventListener('input', function () {
+    var n = parseInt(countEl.value, 10);
+    if (!isNaN(n) && n >= 1 && n <= MAX_STUDENTS) {
+      msgEl.textContent = '';
+      render(null, n, false);
+    }
   });
 
-  render();
-  var savedTv = false;
-  try { savedTv = localStorage.getItem(TV_KEY) === "1"; } catch (e) {}
-  if (savedTv) {
-    // 다시 열었을 때도 TV 모드 유지 (전체 화면은 브라우저 정책상 클릭이 있어야 해서 제외)
-    document.body.classList.add("tv");
-    tvBtn.textContent = "✕ TV 모드 끄기";
-  } else {
-    textEl.focus();
-  }
-})();
+  render(null, 24, false);
 </script>
 </body>
 </html>
